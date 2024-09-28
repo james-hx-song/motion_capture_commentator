@@ -73,14 +73,11 @@ while True:
     img_left = img[:, :width // 2]   # Left half
     img_right = img[:, width // 2:]  # Right half
 
-    if i % 2 == 0:
-        img_left_processed = processImg(img_left)
-        img_left_processed = img_left if 'img_left_processed' not in locals() else img_left_processed
-
-    else:
-        img_right_processed = processImg(img_right)
-        img_right_processed = img_right if 'img_right_processed' not in locals(
-        ) else img_right_processed
+    img_left_processed = processImg(img_left)
+    img_left_processed = img_left if 'img_left_processed' not in locals() else img_left_processed
+    img_right_processed = processImg(img_right)
+    img_right_processed = img_right if 'img_right_processed' not in locals(
+    ) else img_right_processed
 
     # Combine the two images back into one
     if i > 1:

@@ -1,9 +1,10 @@
 from cvzone.PoseModule import PoseDetector
+from motion import processImg
 import cv2
 import numpy as np
 
 # Initialize the webcam and set it to the third camera (index 2)
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 # Initialize the PoseDetector class with the given parameters
 detector = PoseDetector(staticMode=False,
@@ -15,37 +16,6 @@ detector = PoseDetector(staticMode=False,
                         trackCon=0.5)
 
 
-def processImg(img):
-    # Find the human pose in the frame
-    img = detector.findPose(img)
-
-    lmList, bboxInfo = detector.findPosition(
-        img, draw=True, bboxWithHands=False)
-
-    # Check if any body landmarks are detected
-    if lmList:
-        # Get the center of the bounding box around the body
-        center = bboxInfo["center"]
-
-        # Draw a circle at the center of the bounding box
-        cv2.circle(img, center, 5, (255, 0, 255), cv2.FILLED)
-
-        # Calculate the distance between landmarks 11 and 15 and draw it on the image
-        length, img, info = detector.findDistance(lmList[11][0:2],
-                                                  lmList[15][0:2],
-                                                  img=img,
-                                                  color=(255, 0, 0),
-                                                  scale=10)
-
-        # Calculate the angle between landmarks 11, 13, and 15 and draw it on the image
-        angle, img = detector.findAngle(lmList[11][0:2],
-                                        lmList[13][0:2],
-                                        lmList[15][0:2],
-                                        img=img,
-                                        color=(0, 0, 255),
-                                        scale=10)
-
-        return img
 
 
 i = 0
@@ -81,5 +51,5 @@ while True:
     cv2.imshow("Image", img)
 
     # Wait for 1 millisecond between each frame
-    cv2.waitKey(10)
+    cv2.waitKey(100)
     i += 1

@@ -45,13 +45,6 @@ def processImg(img):
                                         color=(0, 0, 255),
                                         scale=10)
 
-        # Check if the angle is close to 50 degrees with an offset of 10
-        isCloseAngle50 = detector.angleCheck(myAngle=angle,
-                                             targetAngle=50,
-                                             offset=10)
-
-        # Print the result of the angle check
-        print(isCloseAngle50)
         return img
 
 
@@ -73,20 +66,16 @@ while True:
     img_left = img[:, :width // 2]   # Left half
     img_right = img[:, width // 2:]  # Right half
 
-    img_left_processed = processImg(img_left)
-    img_left_processed = img_left if 'img_left_processed' not in locals() else img_left_processed
-    img_right_processed = processImg(img_right)
-    img_right_processed = img_right if 'img_right_processed' not in locals(
-    ) else img_right_processed
+    img_left_processed_new = processImg(img_left)
+    if img_left_processed_new is not None:
+        img_left_processed = img_left_processed_new
 
-    # Combine the two images back into one
-    if i > 1:
-        if img_left_processed is not None and img_right_processed is not None:
-            img = np.hstack((img_left_processed, img_right_processed))
-        else:
-            img = img_left if img_left_processed is not None else img_right
-    else:
-        img = img_left
+    img_right_processed_new = processImg(img_right)
+    if img_right_processed_new is not None:
+        img_right_processed = img_right_processed_new
+
+    print(img_left_processed.shape, img_right_processed.shape)
+    img = np.hstack((img_left_processed, img_right_processed))
 
     # Display the frame in a window
     cv2.imshow("Image", img)

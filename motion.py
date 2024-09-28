@@ -1,20 +1,30 @@
 import cv2
 
 # Create a dictionary to store the previous positions of the body parts
-prev_positions = {
+prev_positions_lr = [{
     "left_elbow": None,
     "right_elbow": None,
     "left_wrist": None,
     "right_wrist": None
-}
+}, {
+    "left_elbow": None,
+    "right_elbow": None,
+    "left_wrist": None,
+    "right_wrist": None
+}]
 
 # Create a dictionary to store movement directions
-directions = {
+directions_lr = [{
     "left_elbow": None,
     "right_elbow": None,
     "left_wrist": None,
     "right_wrist": None
-}
+},{
+    "left_elbow": None,
+    "right_elbow": None,
+    "left_wrist": None,
+    "right_wrist": None
+}]
 
 def is_shaking(current_pos, prev_pos, direction, threshold=100):
 
@@ -36,8 +46,29 @@ def is_shaking(current_pos, prev_pos, direction, threshold=100):
     return False, direction
 
 
-def processImg(detector, img):
-    global prev_positions, directions
+def hands_up(lm_list, ):
+    left_wrist, right_wrist = lm_list[15], lm_list[16]
+    head = lm_list[0]
+
+    if left_wrist is None or right_wrist is None or head is None:
+        return False
+    
+    # Check if the hands are above the head
+    # print(left_wrist[1], head[1], right_wrist[1])
+    if left_wrist[1] < head[1] and right_wrist[1] < head[1]:
+        return True
+    
+    return False
+
+
+
+
+
+def processImg(detector, img, left: bool):
+    global prev_positions_lr, directions_lr
+
+    prev_positions = prev_positions_lr[0] if left else prev_positions_lr[1]
+    directions = directions_lr[0] if left else directions_lr[1]
     # Find the human pose in the frame
     img = detector.findPose(img)
 
@@ -51,12 +82,18 @@ def processImg(detector, img):
         left_wrist = lmList[15]
         right_wrist = lmList[16]
 
-        shaking, directions["left_elbow"] = is_shaking(
-            left_elbow[1:3], prev_positions["left_elbow"], directions["left_elbow"])
-        if shaking:
-            print("Left elbow is shaking!")
 
-        prev_positions["left_elbow"] = left_elbow[1:3]
+        # shaking, directions["left_elbow"] = is_shaking(
+        #     left_elbow[1:3], prev_positions["left_elbow"], directions["left_elbow"])
+        # if shaking:
+        #     string = "left" if left else "right"
+        #     print(f"Left elbow is shaking! {string}")
+
+        # prev_positions["left_elbow"] = left_elbow[1:3]
+        if hands_up(lmList):
+            string = "left" if left else "right"
+            print(f"Hands up! {string}")
+
         # Get the center of the bounding box around the body
         center = bboxInfo["center"]
 

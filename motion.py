@@ -46,7 +46,8 @@ def is_shaking(current_pos, prev_pos, direction, threshold=100):
     return False, direction
 
 
-def hands_up(lm_list, ):
+def is_backflip(lm_list, ):
+    # Hands above head
     left_wrist, right_wrist = lm_list[15], lm_list[16]
     head = lm_list[0]
 
@@ -60,7 +61,10 @@ def hands_up(lm_list, ):
     
     return False
 
+def is_moonwalk(lm_list, ):
+    # Knees close to hip
 
+    return 
 
 
 
@@ -90,7 +94,7 @@ def processImg(detector, img, left: bool):
         #     print(f"Left elbow is shaking! {string}")
 
         # prev_positions["left_elbow"] = left_elbow[1:3]
-        if hands_up(lmList):
+        if is_backflip(lmList):
             string = "left" if left else "right"
             print(f"Hands up! {string}")
 

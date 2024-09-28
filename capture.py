@@ -1,5 +1,6 @@
 from cvzone.PoseModule import PoseDetector
 import cv2
+import numpy as np
 
 # Initialize the webcam and set it to the third camera (index 2)
 cap = cv2.VideoCapture(1)
@@ -13,16 +14,11 @@ detector = PoseDetector(staticMode=False,
                         detectionCon=0.5,
                         trackCon=0.5)
 
-# Loop to continuously get frames from the webcam
-while True:
-    # Capture each frame from the webcam
-    success, img = cap.read()
 
+def processImg(img):
     # Find the human pose in the frame
     img = detector.findPose(img)
 
-    # Find the landmarks, bounding box, and center of the body in the frame
-    # Set draw=True to draw the landmarks and bounding box on the image
     lmList, bboxInfo = detector.findPosition(
         img, draw=True, bboxWithHands=False)
 
@@ -56,9 +52,48 @@ while True:
 
         # Print the result of the angle check
         print(isCloseAngle50)
+        return img
+
+
+i = 0
+
+# Loop to continuously get frames from the webcam
+while True:
+    # Capture each frame from the webcam
+    success, img = cap.read()
+
+    if not success:
+        print("Failed to capture image")
+        break
+
+    # Get the height and width of the image
+    height, width, _ = img.shape
+
+    # Split the image vertically into two parts
+    img_left = img[:, :width // 2]   # Left half
+    img_right = img[:, width // 2:]  # Right half
+
+    if i % 2 == 0:
+        img_left_processed = processImg(img_left)
+        img_left_processed = img_left if 'img_left_processed' not in locals() else img_left_processed
+
+    else:
+        img_right_processed = processImg(img_right)
+        img_right_processed = img_right if 'img_right_processed' not in locals(
+        ) else img_right_processed
+
+    # Combine the two images back into one
+    if i > 1:
+        if img_left_processed is not None and img_right_processed is not None:
+            img = np.hstack((img_left_processed, img_right_processed))
+        else:
+            img = img_left if img_left_processed is not None else img_right
+    else:
+        img = img_left
 
     # Display the frame in a window
     cv2.imshow("Image", img)
 
     # Wait for 1 millisecond between each frame
-    cv2.waitKey(1)
+    cv2.waitKey(10)
+    i += 1

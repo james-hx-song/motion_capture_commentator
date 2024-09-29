@@ -234,12 +234,14 @@ class MotionDetector:
     def is_what_motion(self,):
         # Check for all motions
 
-        funcs = [self.is_flair, self.is_ground_flair, self.is_moonwalk, self.is_backflip, self.is_breakdance_freeze_var1, self.is_breakdance_freeze_var4, self.is_breakdance_swipe, self.is_hiphop]
+        # funcs = [self.is_flair, self.is_ground_flair, self.is_moonwalk, self.is_backflip, self.is_breakdance_freeze_var1, self.is_breakdance_freeze_var4, self.is_breakdance_swipe, self.is_hiphop]
+        funcs = [self.is_flair, self.is_backflip, self.is_moonwalk]
+        idx = [0, 3, 2]
         # vals = [func() for func in funcs]
 
         for i, func in enumerate(funcs):
             if func():
-                return i
+                return idx[i]
             
         return -1
         # self.is_flair()

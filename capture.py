@@ -88,19 +88,19 @@ while True:
     if len(keys_idx_l) > 0:
         idx, count = Counter(keys_idx_l).most_common(1)[0]
         # curr_time = time.time()
-        # if count >= utils.THRESHOLD[idx]:
-        print("FINAL RENDER (L): ", utils.FUNCS[idx])
-        key = utils.KEYSL[idx]
-        press(key)
+        if count >= utils.THRESHOLD[idx]:
+            print("FINAL RENDER (L): ", utils.FUNCS[idx])
+            key = utils.KEYSL[idx]
+            press(key)
             # time_left = time.time()
     
     if len(keys_idx_r) > 0:
         idx, count = Counter(keys_idx_r).most_common(1)[0]
         # curr_time = time.time()
-        # if count >= utils.THRESHOLD[idx]:
-        print("FINAL RENDER (R): ", utils.FUNCS[idx])
-        key = utils.KEYSR[idx]
-        press(key)
+        if count >= utils.THRESHOLD[idx]:
+            print("FINAL RENDER (R): ", utils.FUNCS[idx])
+            key = utils.KEYSR[idx]
+            press(key)
             # time_right = time.time()
 
         

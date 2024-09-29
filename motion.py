@@ -1,6 +1,5 @@
 import cv2
 
-from pyautogui import press
 from utils import calculate_distance
 import utils
 import numpy as np
@@ -75,7 +74,7 @@ class MotionDetector:
         # print(left_wrist[1], head[1], right_wrist[1])
         if left_wrist[1] < head[1] and right_wrist[1] < head[1]:
             print("Backflip detected!")
-            press("0")
+            # press("0")
             return True
         
         return False
@@ -94,7 +93,7 @@ class MotionDetector:
 
         if left_dist < eps or right_dist < eps:
             print("Moonwalk detected!")
-            press("3")
+            # press("3")
             return True
 
         return False
@@ -114,7 +113,7 @@ class MotionDetector:
 
         if abs(left_movement) > threshold and abs(right_movement) > threshold and left_movement * right_movement < 0:
             print("Flair (Spinning) detected!")
-            press("4")
+            # press("4")
             return True
         
         return False
@@ -142,7 +141,7 @@ class MotionDetector:
         # print(left_wrist_movement, right_wrist_movement, torso_movement)
         if (left_wrist_movement > self.swipe_threshold or right_wrist_movement > self.swipe_threshold) and torso_movement < self.torso_stability_threshold:
             print("BreakDance Swipe detected!")
-            press("6")
+            # press("6")
             return True
     
 
@@ -167,12 +166,13 @@ class MotionDetector:
         right_wrist_movement = right_final[0] - right_initial[0]
         if torso_movement < self.torso_stability_threshold and left_wrist_movement * right_wrist_movement < 0 and abs(left_wrist_movement) > self.swipe_threshold and abs(right_wrist_movement) > self.swipe_threshold:
             print("BreakDance Freeze Var4 detected!")
-            press("8")
+            # press("8")
             return True
         
         return False
 
     def is_breakdance_freeze_var1(self, ):
+        # Vertical movement
         if len(self.position_history["left_wrist"]) < self.history_length:
             return False
         
@@ -190,7 +190,7 @@ class MotionDetector:
         torso_movement = calculate_distance(torso_initial, torso_final)
         if torso_movement < self.torso_stability_threshold and left_movement * right_movement < 0 and abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
             print("BreakDance Freeze Var1 detected!")
-            press("7")
+            # press("7")
             return True
 
         return False
@@ -212,7 +212,7 @@ class MotionDetector:
 
         if initial_cross and final_cross and (abs(left_final[0] - left_initial[0]) > self.swipe_threshold/2 or abs(right_final[0] - right_initial[0]) > self.swipe_threshold/2):
             print("Hiphop 1 detected!")
-            press("1")
+            # press("1")
             return True
         
 
@@ -225,9 +225,11 @@ class MotionDetector:
         funcs = [self.is_flair, self.is_moonwalk, self.is_backflip, self.is_breakdance_freeze_var1, self.is_breakdance_freeze_var4, self.is_breakdance_swipe, self.is_hiphop]
         # vals = [func() for func in funcs]
 
-        for func in funcs:
+        for i, func in enumerate(funcs):
             if func():
-                return 
+                return i
+            
+        return -1
         # self.is_flair()
         # self.is_moonwalk()
         # self.is_hiphop()
@@ -269,7 +271,7 @@ def processImg(detector, img, left: bool,):
         #     string = "left" if left else "right"
         #     print(f"Action detected! {string}")
 
-        motionDetector.is_what_motion()
+        idx = motionDetector.is_what_motion()
 
         # Get the center of the bounding box around the body
         center = bboxInfo["center"]
@@ -292,7 +294,9 @@ def processImg(detector, img, left: bool,):
                                         color=(0, 0, 255),
                                         scale=10)
 
-        return img
+        return img, idx
+    
+    return img, None
     
 
 

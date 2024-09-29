@@ -20,6 +20,7 @@ class MotionDetector:
             "torso": [],
             "left_knee": [],
             "right_knee": [],
+            "head": []
         }
 
         self.swipe_threshold = 50
@@ -49,6 +50,7 @@ class MotionDetector:
             self.update_position_history("torso", torso)
             self.update_position_history("left_knee", left_knee)
             self.update_position_history("right_knee", right_knee)
+            self.update_position_history("head", lm_list[0])
         
 
 
@@ -209,25 +211,20 @@ class MotionDetector:
         return False
 
     def is_hiphop(self, ):
-        # Left Right Leg Movement
+        # Head Duck
 
-        if len(self.position_history["left_knee"]) < self.history_length:
+        if len(self.position_history["head"]) < self.history_length:
             return False
         
-        left_initial = self.position_history["left_knee"][0]
-        left_final = self.position_history["left_knee"][-1]
-        right_initial = self.position_history["right_knee"][0]
-        right_final = self.position_history["right_knee"][-1]
+        head_initial = self.position_history["head"][0]
+        head_final = self.position_history["head"][-1]
 
-        # Check if the knees crossed each other
-        initial_cross = left_initial[0] < right_initial[0] # left knee starts to the left of right knee
-        final_cross = left_final[0] > right_final[0]     # left knee ends up to the right of right knee
+        head_movement = head_final[1] - head_initial[1]
 
-        if initial_cross and final_cross and (abs(left_final[0] - left_initial[0]) > self.swipe_threshold/2 or abs(right_final[0] - right_initial[0]) > self.swipe_threshold/2):
-            print("Hiphop 1 detected! ", self.flag)
+        if head_movement < -150:
+            print("HipHop detected! ", self.flag)
             # press("1")
             return True
-        
 
         return False
 

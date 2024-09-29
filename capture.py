@@ -5,6 +5,7 @@ from collections import Counter
 import cv2
 import numpy as np
 import utils
+import time
 
 # Initialize the webcam and set it to the third camera (index 2)
 cap = cv2.VideoCapture(0)
@@ -23,12 +24,13 @@ detector = PoseDetector(staticMode=False,
 
 i = 0
 img_left_processed, img_right_processed = None, None
+time_left, time_right = 0, 0
 # Loop to continuously get frames from the webcam
 while True:
     # Capture each frame from the webcam
     keys_idx = []
     keys_idx_l, keys_idx_r = [], []
-    for _ in range(utils.FRAMESPERSEC * utils.SECSTOWAIT):
+    for _ in range(int(utils.FRAMESPERSEC * utils.SECSTOWAIT)):
         success, img = cap.read()
 
         if not success:
@@ -39,8 +41,8 @@ while True:
         height, width, _ = img.shape
 
         # # Split the image vertically into two parts
-        img_left = img[:, :width // 2]   # Left half
-        img_right = img[:, width // 2:]  # Right half
+        img_left = img[:, width // 2:]   # Left half
+        img_right = img[:, :width // 2]  # Right half
 
         img_left_processed_new, idx_l = processImg(detector, img_left, True)
         if img_left_processed_new is not None:
@@ -56,7 +58,7 @@ while True:
 
         # print(img_left_processed.shape, img_right_processed.shape)
         if img_left_processed is not None and img_right_processed is not None:
-            img = np.hstack((img_left_processed, img_right_processed))
+            img = np.hstack((img_right_processed, img_left_processed))
 
 
 
@@ -82,20 +84,24 @@ while True:
     #         print("FINAL RENDER: ", utils.FUNCS[idx])
     #         key = utils.KEYS[idx]
     #         press(key)
-
+    
     if len(keys_idx_l) > 0:
         idx, count = Counter(keys_idx_l).most_common(1)[0]
-        if count >= utils.THRESHOLD[idx]:
-            print("FINAL RENDER (L): ", utils.FUNCS[idx])
-            key = utils.KEYSL[idx]
-            press(key)
+        # curr_time = time.time()
+        # if count >= utils.THRESHOLD[idx]:
+        print("FINAL RENDER (L): ", utils.FUNCS[idx])
+        key = utils.KEYSL[idx]
+        press(key)
+            # time_left = time.time()
     
     if len(keys_idx_r) > 0:
         idx, count = Counter(keys_idx_r).most_common(1)[0]
-        if count >= utils.THRESHOLD[idx]:
-            print("FINAL RENDER (R): ", utils.FUNCS[idx])
-            key = utils.KEYSR[idx]
-            press(key)
+        # curr_time = time.time()
+        # if count >= utils.THRESHOLD[idx]:
+        print("FINAL RENDER (R): ", utils.FUNCS[idx])
+        key = utils.KEYSR[idx]
+        press(key)
+            # time_right = time.time()
 
         
     i += 1

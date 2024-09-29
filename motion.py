@@ -1,5 +1,6 @@
 import cv2
 
+from pyautogui import press
 from utils import calculate_distance
 import utils
 import numpy as np
@@ -75,6 +76,7 @@ class MotionDetector:
         # print(left_wrist[1], head[1], right_wrist[1])
         if left_wrist[1] < head[1] and right_wrist[1] < head[1]:
             print("Backflip detected!")
+            press("0")
             return True
         
         return False
@@ -93,6 +95,7 @@ class MotionDetector:
 
         if left_dist < eps and right_dist < eps:
             print("Moonwalk detected!")
+            press("3")
             return True
 
         return False
@@ -112,6 +115,7 @@ class MotionDetector:
 
         if abs(left_movement) > threshold and abs(right_movement) > threshold and left_movement * right_movement < 0:
             print("Flair (Spinning) detected!")
+            press("4")
             return True
         
         return False
@@ -139,6 +143,7 @@ class MotionDetector:
         # print(left_wrist_movement, right_wrist_movement, torso_movement)
         if (left_wrist_movement > self.swipe_threshold or right_wrist_movement > self.swipe_threshold) and torso_movement < self.torso_stability_threshold:
             print("BreakDance Swipe detected!")
+            press("6")
             return True
     
 
@@ -163,6 +168,7 @@ class MotionDetector:
         right_wrist_movement = right_final[0] - right_initial[0]
         if torso_movement < self.torso_stability_threshold and left_wrist_movement * right_wrist_movement < 0 and abs(left_wrist_movement) > self.swipe_threshold and abs(right_wrist_movement) > self.swipe_threshold:
             print("BreakDance Freeze Var4 detected!")
+            press("8")
             return True
         
         return False
@@ -185,11 +191,12 @@ class MotionDetector:
 
         if torso_movement < self.torso_stability_threshold and left_movement * right_movement < 0 and abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
             print("BreakDance Freeze Var1 detected!")
+            press("7")
             return True
 
         return False
 
-    def is_breakdance_footwork_1(self, ):
+    def is_hiphop(self, ):
         # Left Right Leg Movement
 
         if len(self.position_history["left_knee"]) < self.history_length:
@@ -204,11 +211,14 @@ class MotionDetector:
         right_movement = right_final[0] - right_initial[0]
 
         if abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
-            print("BreakDance Footwork 1 detected!")
+            print("Hiphop 1 detected!")
+            press("1")
             return True
         
 
         return False
+    
+    
 
 
 

@@ -2,6 +2,7 @@ from cvzone.PoseModule import PoseDetector
 from motion import processImg
 import cv2
 import numpy as np
+import utils
 
 # Initialize the webcam and set it to the third camera (index 2)
 cap = cv2.VideoCapture(0)
@@ -58,5 +59,5 @@ while True:
     if img is not None:
         cv2.imshow("Image", img)
     # Wait for 1 millisecond between each frame
-    cv2.waitKey(100)
+    cv2.waitKey(1000 // utils.FRAMESPERSEC)
     i += 1

@@ -27,6 +27,7 @@ img_left_processed, img_right_processed = None, None
 while True:
     # Capture each frame from the webcam
     keys_idx = []
+    keys_idx_l, keys_idx_r = [], []
     for _ in range(utils.FRAMESPERSEC * utils.SECSTOWAIT):
         success, img = cap.read()
 
@@ -38,40 +39,63 @@ while True:
         height, width, _ = img.shape
 
         # # Split the image vertically into two parts
-        # img_left = img[:, :width // 2]   # Left half
-        # img_right = img[:, width // 2:]  # Right half
+        img_left = img[:, :width // 2]   # Left half
+        img_right = img[:, width // 2:]  # Right half
 
-        # img_left_processed_new = processImg(detector, img_left, True)
-        # if img_left_processed_new is not None:
-        #     img_left_processed = img_left_processed_new
+        img_left_processed_new, idx_l = processImg(detector, img_left, True)
+        if img_left_processed_new is not None:
+            img_left_processed = img_left_processed_new
+            if idx_l is not None and idx_l != -1:
+                keys_idx_l.append(idx_l)
 
-        # img_right_processed_new = processImg(detector, img_right, False)
-        # if img_right_processed_new is not None:
-        #     img_right_processed = img_right_processed_new
+        img_right_processed_new, idx_r = processImg(detector, img_right, False)
+        if img_right_processed_new is not None:
+            img_right_processed = img_right_processed_new
+            if idx_r is not None and idx_r != -1:
+                keys_idx_r.append(idx_r)
 
         # print(img_left_processed.shape, img_right_processed.shape)
-        # if img_left_processed is not None and img_right_processed is not None:
-        #     img = np.hstack((img_left_processed, img_right_processed))
+        if img_left_processed is not None and img_right_processed is not None:
+            img = np.hstack((img_left_processed, img_right_processed))
 
-        #     # Display the frame in a window
+
+
+
+
+            # Display the frame in a window
 
         
+        cv2.imshow("Image", img)
+
+        # img, idx = processImg(detector, img, True)
+
+        # if img is not None:
         #     cv2.imshow("Image", img)
-
-        img, idx = processImg(detector, img, True)
-
-        if img is not None:
-            cv2.imshow("Image", img)
-            if idx is not None and idx != -1:
-                keys_idx.append(idx)
+        #     if idx is not None and idx != -1:
+        #         keys_idx.append(idx)
 
         cv2.waitKey(1000 // utils.FRAMESPERSEC)
     
-    if len(keys_idx) > 0:
-        idx, count = Counter(keys_idx).most_common(1)[0]
+    # if len(keys_idx) > 0:
+    #     idx, count = Counter(keys_idx).most_common(1)[0]
+    #     if count >= utils.THRESHOLD[idx]:
+    #         print("FINAL RENDER: ", utils.FUNCS[idx])
+    #         key = utils.KEYS[idx]
+    #         press(key)
+
+    if len(keys_idx_l) > 0:
+        idx, count = Counter(keys_idx_l).most_common(1)[0]
         if count >= utils.THRESHOLD[idx]:
-            print("FINAL RENDER: ", utils.FUNCS[idx])
-            key = utils.KEYS[idx]
+            print("FINAL RENDER (L): ", utils.FUNCS[idx])
+            key = utils.KEYSL[idx]
+            press(key)
+    
+    if len(keys_idx_r) > 0:
+        idx, count = Counter(keys_idx_r).most_common(1)[0]
+        if count >= utils.THRESHOLD[idx]:
+            print("FINAL RENDER (R): ", utils.FUNCS[idx])
+            key = utils.KEYSR[idx]
             press(key)
 
+        
     i += 1

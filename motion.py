@@ -7,8 +7,10 @@ import numpy as np
 
 
 class MotionDetector:
-    def __init__(self, lm_list=None):
+    def __init__(self, lm_list=None, flag: bool = False):
         self.lm_list = lm_list
+
+        self.flag = "left" if flag else "right"
 
         self.position_history = {
             "left_shoulder": [],
@@ -73,7 +75,7 @@ class MotionDetector:
         # Check if the hands are above the head
         # print(left_wrist[1], head[1], right_wrist[1])
         if left_wrist[1] < head[1] and right_wrist[1] < head[1]:
-            print("Backflip detected!")
+            print("Backflip detected! ", self.flag)
             # press("0")
             return True
         
@@ -91,13 +93,13 @@ class MotionDetector:
         left_dist = calculate_distance(left_knee, left_hip)
         right_dist = calculate_distance(right_knee, right_hip)
         if left_dist < eps or right_dist < eps:
-            print("Moonwalk detected!")
+            print("Moonwalk detected! ", self.flag)
             # press("3")
             return True
 
         return False
     
-    def is_flair(self, threshold=100):
+    def is_flair(self, threshold=50):
         # Spinning
         if len(self.position_history["left_shoulder"]) < self.history_length:
             return False
@@ -111,8 +113,26 @@ class MotionDetector:
         right_movement = right_final[0] - right_initial[0]
 
         if abs(left_movement) > threshold and abs(right_movement) > threshold and left_movement * right_movement < 0:
-            print("Flair (Spinning) detected!")
+            print("Flair (Spinning) detected! ", self.flag)
             # press("4")
+            return True
+        
+        return False
+    
+    def is_ground_flair(self, threshold=50):
+        # Spinning
+        if self.lm_list is None:
+            print("Update Landmark List!!")
+            return False
+        
+        left_wrist, right_wrist = self.lm_list[15], self.lm_list[16]
+        left_feet, right_feet = self.lm_list[27], self.lm_list[28]
+
+        left_dist = calculate_distance(left_wrist, left_feet)
+        right_dist = calculate_distance(right_wrist, right_feet)
+
+        if left_dist < threshold and right_dist < threshold:
+            print("Ground Flair detected! ", self.flag)
             return True
         
         return False
@@ -139,7 +159,7 @@ class MotionDetector:
         right_wrist_movement = abs(right_final[0] - right_initial[0])
         # print(left_wrist_movement, right_wrist_movement, torso_movement)
         if (left_wrist_movement > self.swipe_threshold or right_wrist_movement > self.swipe_threshold) and torso_movement < self.torso_stability_threshold:
-            print("BreakDance Swipe detected!")
+            print("BreakDance Swipe detected! ", self.flag)
             # press("6")
             return True
     
@@ -164,31 +184,25 @@ class MotionDetector:
         left_wrist_movement = left_final[0] - left_initial[0]
         right_wrist_movement = right_final[0] - right_initial[0]
         if torso_movement < self.torso_stability_threshold and left_wrist_movement * right_wrist_movement < 0 and abs(left_wrist_movement) > self.swipe_threshold and abs(right_wrist_movement) > self.swipe_threshold:
-            print("BreakDance Freeze Var4 detected!")
+            print("BreakDance Freeze Var4 detected! ", self.flag)
             # press("8")
             return True
         
         return False
 
     def is_breakdance_freeze_var1(self, ):
-        # Vertical movement
+        # Right hand above head
         if len(self.position_history["left_wrist"]) < self.history_length:
             return False
         
+        left_wrist, right_wrist = self.lm_list[15], self.lm_list[16]
+        head = self.lm_list[0]
 
-        left_initial = self.position_history["left_wrist"][0]
-        left_final = self.position_history["left_wrist"][-1]
-        right_initial = self.position_history["right_wrist"][0]
-        right_final = self.position_history["right_wrist"][-1]
-        torso_initial = self.position_history["torso"][0]
-        torso_final = self.position_history["torso"][-1]
-
-        left_movement = left_final[1] - left_initial[1]
-        right_movement = right_final[1] - right_initial[1]
-
-        torso_movement = calculate_distance(torso_initial, torso_final)
-        if torso_movement < self.torso_stability_threshold and left_movement * right_movement < 0 and abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
-            print("BreakDance Freeze Var1 detected!")
+        if left_wrist is None or right_wrist is None or head is None:
+            return False
+        
+        if left_wrist[1] <= head[1] and right_wrist[1] >= head[1]:
+            print("BreakDance Freeze Var1 detected! ", self.flag)
             # press("7")
             return True
 
@@ -210,18 +224,20 @@ class MotionDetector:
         final_cross = left_final[0] > right_final[0]     # left knee ends up to the right of right knee
 
         if initial_cross and final_cross and (abs(left_final[0] - left_initial[0]) > self.swipe_threshold/2 or abs(right_final[0] - right_initial[0]) > self.swipe_threshold/2):
-            print("Hiphop 1 detected!")
+            print("Hiphop 1 detected! ", self.flag)
             # press("1")
             return True
         
 
         return False
+
+    
     
 
     def is_what_motion(self,):
         # Check for all motions
 
-        funcs = [self.is_flair, self.is_moonwalk, self.is_backflip, self.is_breakdance_freeze_var1, self.is_breakdance_freeze_var4, self.is_breakdance_swipe, self.is_hiphop]
+        funcs = [self.is_flair, self.is_ground_flair, self.is_moonwalk, self.is_backflip, self.is_breakdance_freeze_var1, self.is_breakdance_freeze_var4, self.is_breakdance_swipe, self.is_hiphop]
         # vals = [func() for func in funcs]
 
         for i, func in enumerate(funcs):
@@ -236,16 +252,25 @@ class MotionDetector:
 
 
 
-motionDetector = MotionDetector()
+# motionDetector = MotionDetector()
+motionDetectorL = MotionDetector(flag=True)
+motionDetectorR = MotionDetector(flag=False)
 def processImg(detector, img, left: bool,):
 
-    global motionDetector
+    # global motionDetector
+    global motionDetectorL, motionDetectorR
     # Find the human pose in the frame
     img = detector.findPose(img)
 
     lmList, bboxInfo = detector.findPosition(
         img, draw=True, bboxWithHands=False)
     
+    
+    if left:
+        motionDetector = motionDetectorL
+    else:
+        motionDetector = motionDetectorR
+
     motionDetector.update_lm_list(lmList)
     # Check if any body landmarks are detected
     if lmList:
@@ -284,11 +309,24 @@ def processImg(detector, img, left: bool,):
                                                   img=img,
                                                   color=(255, 0, 0),
                                                   scale=10)
+        
+        length, img, info = detector.findDistance(lmList[12][0:2],
+                                                  lmList[16][0:2],
+                                                  img=img,
+                                                  color=(255, 0, 0),
+                                                  scale=10)
 
         # Calculate the angle between landmarks 11, 13, and 15 and draw it on the image
         angle, img = detector.findAngle(lmList[11][0:2],
                                         lmList[13][0:2],
                                         lmList[15][0:2],
+                                        img=img,
+                                        color=(0, 0, 255),
+                                        scale=10)
+        
+        angle, img = detector.findAngle(lmList[12][0:2],
+                                        lmList[14][0:2],
+                                        lmList[16][0:2],
                                         img=img,
                                         color=(0, 0, 255),
                                         scale=10)

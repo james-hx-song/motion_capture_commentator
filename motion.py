@@ -70,7 +70,6 @@ class MotionDetector:
         if left_wrist is None or right_wrist is None or head is None:
             return False
         
-        print(left_wrist)
         
         # Check if the hands are above the head
         # print(left_wrist[1], head[1], right_wrist[1])
@@ -81,7 +80,7 @@ class MotionDetector:
         
         return False
 
-    def is_moonwalk(self, eps=100):
+    def is_moonwalk(self, eps=150):
         # Knee close to hip
         if self.lm_list is None:
             print("Update Landmark List!!")
@@ -93,14 +92,14 @@ class MotionDetector:
         left_dist = calculate_distance(left_knee, left_hip)
         right_dist = calculate_distance(right_knee, right_hip)
 
-        if left_dist < eps and right_dist < eps:
+        if left_dist < eps or right_dist < eps:
             print("Moonwalk detected!")
             press("3")
             return True
 
         return False
     
-    def is_flair(self, threshold=200):
+    def is_flair(self, threshold=100):
         # Spinning
         if len(self.position_history["left_shoulder"]) < self.history_length:
             return False
@@ -177,6 +176,7 @@ class MotionDetector:
         if len(self.position_history["left_wrist"]) < self.history_length:
             return False
         
+
         left_initial = self.position_history["left_wrist"][0]
         left_final = self.position_history["left_wrist"][-1]
         right_initial = self.position_history["right_wrist"][0]
@@ -188,7 +188,6 @@ class MotionDetector:
         right_movement = right_final[1] - right_initial[1]
 
         torso_movement = calculate_distance(torso_initial, torso_final)
-
         if torso_movement < self.torso_stability_threshold and left_movement * right_movement < 0 and abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
             print("BreakDance Freeze Var1 detected!")
             press("7")
@@ -207,10 +206,11 @@ class MotionDetector:
         right_initial = self.position_history["right_knee"][0]
         right_final = self.position_history["right_knee"][-1]
 
-        left_movement = left_final[0] - left_initial[0]
-        right_movement = right_final[0] - right_initial[0]
+        # Check if the knees crossed each other
+        initial_cross = left_initial[0] < right_initial[0] # left knee starts to the left of right knee
+        final_cross = left_final[0] > right_final[0]     # left knee ends up to the right of right knee
 
-        if abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
+        if initial_cross and final_cross and (abs(left_final[0] - left_initial[0]) > self.swipe_threshold/2 or abs(right_final[0] - right_initial[0]) > self.swipe_threshold/2):
             print("Hiphop 1 detected!")
             press("1")
             return True
@@ -218,7 +218,19 @@ class MotionDetector:
 
         return False
     
-    
+
+    def is_what_motion(self,):
+        # Check for all motions
+
+        funcs = [self.is_flair, self.is_moonwalk, self.is_backflip, self.is_breakdance_freeze_var1, self.is_breakdance_freeze_var4, self.is_breakdance_swipe, self.is_hiphop]
+        # vals = [func() for func in funcs]
+
+        for func in funcs:
+            if func():
+                return 
+        # self.is_flair()
+        # self.is_moonwalk()
+        # self.is_hiphop()
 
 
 
@@ -253,9 +265,11 @@ def processImg(detector, img, left: bool,):
         #     string = "left" if left else "right"
         #     print(f"Hands up! {string}")
 
-        if motionDetector.is_breakdance_swipe():
-            string = "left" if left else "right"
-            print(f"Action detected! {string}")
+        # if motionDetector.is_breakdance_swipe():
+        #     string = "left" if left else "right"
+        #     print(f"Action detected! {string}")
+
+        motionDetector.is_what_motion()
 
         # Get the center of the bounding box around the body
         center = bboxInfo["center"]

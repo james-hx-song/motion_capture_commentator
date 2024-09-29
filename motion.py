@@ -79,7 +79,7 @@ class MotionDetector:
         
         return False
 
-    def is_moonwalk(self, eps=150):
+    def is_moonwalk(self, eps=100):
         # Knee close to hip
         if self.lm_list is None:
             print("Update Landmark List!!")
@@ -90,7 +90,6 @@ class MotionDetector:
 
         left_dist = calculate_distance(left_knee, left_hip)
         right_dist = calculate_distance(right_knee, right_hip)
-
         if left_dist < eps or right_dist < eps:
             print("Moonwalk detected!")
             # press("3")

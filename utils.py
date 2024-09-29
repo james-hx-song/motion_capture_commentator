@@ -7,7 +7,7 @@ def calculate_distance(point1, point2):
 
 
 FRAMESPERSEC = 10
-SECSTOWAIT = 3
+SECSTOWAIT = 1
 THRESHOLD = [4, 3, 3, 1, 2, 4, 5]
 
 KEYS = ["4", "3", "0", "7", "8", "6", "1"]

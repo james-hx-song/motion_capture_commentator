@@ -2,26 +2,7 @@ import cv2
 
 from utils import calculate_distance
 import utils
-
-
-# def is_shaking(current_pos, prev_pos, direction, threshold=100):
-
-#     if prev_pos is None:
-#         return False, direction
-
-#     # Calculate change in position (velocity)
-#     dx = current_pos[0] - prev_pos[0]
-#     dy = current_pos[1] - prev_pos[1]
-
-#     # Check for horizontal (x) or vertical (y) movement beyond a threshold
-#     if abs(dx) > threshold or abs(dy) > threshold:
-#         new_direction = "left-right" if abs(dx) > abs(dy) else "up-down"
-#         # If direction has changed, we consider it a shake
-#         if new_direction != direction:
-#             return True, new_direction
-#         else:
-#             return False, new_direction
-#     return False, direction
+import numpy as np
 
 
 
@@ -32,7 +13,15 @@ class MotionDetector:
         self.position_history = {
             "left_shoulder": [],
             "right_shoulder": [],
+            "left_wrist": [],
+            "right_wrist": [],
+            "torso": [],
+            "left_knee": [],
+            "right_knee": [],
         }
+
+        self.swipe_threshold = 50
+        self.torso_stability_threshold = 10
 
         self.history_length = utils.FRAMESPERSEC
 
@@ -42,9 +31,23 @@ class MotionDetector:
         left_shoulder = lm_list[11] if lm_list else None
         right_shoulder = lm_list[12] if lm_list else None
 
-        if left_shoulder and right_shoulder:
+        left_wrist = lm_list[15] if lm_list else None
+        right_wrist = lm_list[16] if lm_list else None
+
+        torso = lm_list[11] if lm_list else None
+
+        left_knee = lm_list[25] if lm_list else None
+        right_knee = lm_list[26] if lm_list else None
+
+        if lm_list:
             self.update_position_history("left_shoulder", left_shoulder)
             self.update_position_history("right_shoulder", right_shoulder)
+            self.update_position_history("left_wrist", left_wrist)
+            self.update_position_history("right_wrist", right_wrist)
+            self.update_position_history("torso", torso)
+            self.update_position_history("left_knee", left_knee)
+            self.update_position_history("right_knee", right_knee)
+        
 
 
     def update_position_history(self, key, position):
@@ -55,6 +58,7 @@ class MotionDetector:
 
 
     def is_backflip(self, ) -> bool:
+        # Hold wrist above head
         if self.lm_list is None:
             print("Update Landmark List!!")
             return False
@@ -76,6 +80,7 @@ class MotionDetector:
         return False
 
     def is_moonwalk(self, eps=100):
+        # Knee close to hip
         if self.lm_list is None:
             print("Update Landmark List!!")
             return False
@@ -92,7 +97,8 @@ class MotionDetector:
 
         return False
     
-    def is_spinning(self, threshold=200):
+    def is_flair(self, threshold=200):
+        # Spinning
         if len(self.position_history["left_shoulder"]) < self.history_length:
             return False
         
@@ -105,24 +111,104 @@ class MotionDetector:
         right_movement = right_final[0] - right_initial[0]
 
         if abs(left_movement) > threshold and abs(right_movement) > threshold and left_movement * right_movement < 0:
-            print("Spinning detected!")
+            print("Flair (Spinning) detected!")
             return True
         
         return False
     
     def is_breakdance_swipe(self, ):
-        pass
+        # Left or right swipe
+
+        if len(self.position_history["left_wrist"]) < self.history_length:
+            return False
+        
+        left_initial = self.position_history["left_wrist"][0]
+        left_final = self.position_history["left_wrist"][-1]
+        right_initial = self.position_history["right_wrist"][0]
+        right_final = self.position_history["right_wrist"][-1]
+        torso_initial = self.position_history["torso"][0]
+        torso_final = self.position_history["torso"][-1]
+
+
+        # Calculate torso movement to ensure it's relatively still
+        torso_movement = calculate_distance(torso_initial, torso_final)
+
+        # Check if either wrist has moved horizontally more than the threshold and the torso has moved minimally
+        left_wrist_movement = abs(left_final[0] - left_initial[0])
+        right_wrist_movement = abs(right_final[0] - right_initial[0])
+        # print(left_wrist_movement, right_wrist_movement, torso_movement)
+        if (left_wrist_movement > self.swipe_threshold or right_wrist_movement > self.swipe_threshold) and torso_movement < self.torso_stability_threshold:
+            print("BreakDance Swipe detected!")
+            return True
+    
+
+        return False
 
     def is_breakdance_freeze_var4(self, ):
-        pass
+        # Left Right Cross
+
+        if len(self.position_history["left_wrist"]) < self.history_length:
+            return False
+        
+        left_initial = self.position_history["left_wrist"][0]
+        left_final = self.position_history["left_wrist"][-1]
+        right_initial = self.position_history["right_wrist"][0]
+        right_final = self.position_history["right_wrist"][-1]
+        torso_initial = self.position_history["torso"][0]
+        torso_final = self.position_history["torso"][-1]
+
+        torso_movement = calculate_distance(torso_initial, torso_final)
+
+        left_wrist_movement = left_final[0] - left_initial[0]
+        right_wrist_movement = right_final[0] - right_initial[0]
+        if torso_movement < self.torso_stability_threshold and left_wrist_movement * right_wrist_movement < 0 and abs(left_wrist_movement) > self.swipe_threshold and abs(right_wrist_movement) > self.swipe_threshold:
+            print("BreakDance Freeze Var4 detected!")
+            return True
+        
+        return False
 
     def is_breakdance_freeze_var1(self, ):
-        pass
+        if len(self.position_history["left_wrist"]) < self.history_length:
+            return False
+        
+        left_initial = self.position_history["left_wrist"][0]
+        left_final = self.position_history["left_wrist"][-1]
+        right_initial = self.position_history["right_wrist"][0]
+        right_final = self.position_history["right_wrist"][-1]
+        torso_initial = self.position_history["torso"][0]
+        torso_final = self.position_history["torso"][-1]
+
+        left_movement = left_final[1] - left_initial[1]
+        right_movement = right_final[1] - right_initial[1]
+
+        torso_movement = calculate_distance(torso_initial, torso_final)
+
+        if torso_movement < self.torso_stability_threshold and left_movement * right_movement < 0 and abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
+            print("BreakDance Freeze Var1 detected!")
+            return True
+
+        return False
 
     def is_breakdance_footwork_1(self, ):
-        pass
+        # Left Right Leg Movement
 
-    
+        if len(self.position_history["left_knee"]) < self.history_length:
+            return False
+        
+        left_initial = self.position_history["left_knee"][0]
+        left_final = self.position_history["left_knee"][-1]
+        right_initial = self.position_history["right_knee"][0]
+        right_final = self.position_history["right_knee"][-1]
+
+        left_movement = left_final[0] - left_initial[0]
+        right_movement = right_final[0] - right_initial[0]
+
+        if abs(left_movement) > self.swipe_threshold and abs(right_movement) > self.swipe_threshold:
+            print("BreakDance Footwork 1 detected!")
+            return True
+        
+
+        return False
 
 
 
@@ -157,7 +243,7 @@ def processImg(detector, img, left: bool,):
         #     string = "left" if left else "right"
         #     print(f"Hands up! {string}")
 
-        if motionDetector.is_spinning():
+        if motionDetector.is_breakdance_swipe():
             string = "left" if left else "right"
             print(f"Action detected! {string}")
 
